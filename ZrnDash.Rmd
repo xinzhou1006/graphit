@@ -1,0 +1,115 @@
+---
+title: "ZrnDash"
+output: 
+  flexdashboard::flex_dashboard:
+    orientation: rows
+    social: menu
+    vertical_layout: scroll
+---
+
+```{r setup, include=FALSE}
+# RMarkdown zircon geochronology dashboard template updated 2018.08.13 CH.
+
+# install missing packages, load packages
+  # knitr for assembling RMarkdown documents
+  if(!require(knitr)){install.packages("knitr")}  # install
+  library(knitr)  # load
+  # ggplot for making graphs
+  if(!require(ggplot2)){install.packages("ggplot2", dependencies = TRUE)}
+  library(ggplot2)  # load
+  # plyr for combining data frames, displaying dashboard
+  if(!require(plyr)){install.packages("plyr")}  # install
+  library(plyr)  # load
+  # dplyr for making plotly work
+  if(!require(dplyr)){install.packages("dplyr", dependencies = TRUE)} 
+  library(dplyr)  # load
+  # plotly for making interactive graphs
+  if(!require(plotly)){install.packages("plotly", dependencies = TRUE)} 
+  library(plotly)  # load
+  # flexdashboard for making dashboards
+  if(!require(flexdashboard)){install.packages("flexdashboard")}  # install
+  library(flexdashboard)  # load
+  # RColorBrewer package for color palette
+  if(!require(RColorBrewer)){install.packages("RColorBrewer")}  # install
+  library(RColorBrewer)  # load
+  # reshape2 for melting data frames
+  if(!require(reshape2)){install.packages("reshape2")}  # install
+  library(reshape2)  # load
+  # leaflet extracts color codes from a palette given a value (for REE plots)
+  if(!require(leaflet)){install.packages("leaflet")}  # install
+  library(leaflet)  # load
+  # ggfortify for plotting output of MDS
+  if(!require(ggfortify)){install.packages("ggfortify")}  # install
+  library(ggfortify)  # load
+  # BBmisc for normalizing data frame function
+  if(!require(BBmisc)){install.packages("BBmisc")}  # install
+  library(BBmisc)  # load
+
+# clear all from workspace/environment
+  rm(list=ls())
+
+# Set universal settings. 
+  # For all code chunks, omit code in knited document and hide messages and 
+  # warnings.
+  knitr::opts_chunk$set(echo=FALSE, message=FALSE, warning=FALSE) 
+
+  # Set working directory.
+  knitr::opts_knit$set(root.dir = 
+  "/Users/claireharrigan/Dropbox/IGL + Research/R/Functions/")
+```
+
+```{r import, include=FALSE}
+# functions required:
+  source("ImportZirconFDT.R") # for importing and cleaning up files
+  source("SplitAnalysis.R") # for cleaning up LA-ICPMS analysis strings 
+  
+# Import zircon LA-ICPMS data.
+  # First, save your final data table as a .csv file with the values as numbers
+  # with many decimal places.
+  # Type file.choose() in the console, then hit enter to select the file. Copy
+  # and paste the resulting filepath into the function below.
+  DF <- ImportZirconFDT("/Users/claireharrigan/Dropbox/IGL + Research/WISZ/Results/14WZ3-2 LGCC Gpg/zircon/Geochemistry/zircon_14WZ3-2_LA-ICPMS FDT.csv")
+  # Apply the SplitAnalysis function to the analysis column and save the results
+  # as a temporary dataframe.
+  tempDF <- SplitAnalysis(column.name = DF$analysis) 
+  # Save sample name from temporary dataframe into the main dataframe.
+  DF$sample <- tempDF$samp.name
+  # Save mount size from temporary dataframe into the main dataframe.
+  DF$size <- tempDF$size 
+  # Save spot number from temporary datafrae into the main dataframe.
+  DF$spot <- tempDF$spot 
+  # OPTIONALL Remove spots that are not zircon (uncomment next line and edit).
+  #DF <- subset(DF, spot != 135)
+  rm(tempDF)  # remove temporary data frame from environment
+
+# OPTIONAL: Import a second zircon LA-ICPMS final data table 
+# Uncomment this section and edit filepath of the next line to import a second
+# final data table.
+  # DF2 <- Import("/Users/claireharrigan/Dropbox/IGL + Research/WISZ/Results/14WZ3-2 LGCC Gpg/zircon/Geochemistry/zircon_14WZ3-2_LA-ICPMS FDT.csv")
+  # # Apply the SplitAnalysis function to the analysis column and save the results
+  # # as a temporary dataframe.
+  # tempDF2 <- SplitAnalysis(column.name = DF2$analysis) 
+  # # Save sample name from temporary dataframe into the main dataframe.
+  # DF2$sample <- tempDF2$samp.name
+  # # Save mount size from temporary dataframe into the main dataframe.
+  # DF2$size <- tempDF2$size 
+  # # Save spot number from temporary datafrae into the main dataframe.
+  # DF2$spot <- tempDF2$spot 
+  # # Remove spots that are not zircon (optional--uncomment next line and edit).
+  # #DF2 <- subset(DF2, spot != 135)
+  # rm(tempDF2)  # remove temporary data frame from environment
+
+# OPTIONAL: Bind all imported data frames together and remove extra data frames.
+# Uncomment the following section if importing multiple final data tables.
+  # DF <- rbind.fill(DF, DF2)  # Combine using rbind.fill function from plyr.
+  # rm(DF2)  # Remove individual sample data frames.
+```
+
+```{r set_values, include=FALSE}
+# Set values for Ti-in-zircon thermometer.
+  aTiO2 = 0.7     # set activity of TiO2
+  aSiO2 = 1       # set activity of SiO2
+
+# Set text to describe samples.
+sample.notes = "This is the template for creating a zircon geochemistry dashboard with TIMS data."
+```
