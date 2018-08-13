@@ -113,3 +113,237 @@ output:
 # Set text to describe samples.
 sample.notes = "This is the template for creating a zircon geochemistry dashboard with TIMS data."
 ```
+
+```{r calculate, include=FALSE}
+# functions required for calculations and plotting:
+  source("ChondriteNormalization.R")  # for normalizing REE values
+  source("CalculateRatios.R")  # for calculating trace element ratios
+  source("PlotlyBivariateZrn.R")  # for making interactive bivariate plots
+  source("PlotlySummedPDFZrn.R")  # for making interactive summed PDF
+  source("PlotlyREE.R")  # for making interactive REE plots
+
+# Create new columns based on sample, size, and spot information.
+  # Create "size spot" column for unique naming for PCA and MDS (ex. "M 132").
+  DF$size.spot <- paste(DF$size, " ", DF$spot, sep="") # create 
+  # Create "sample size spot" column for unique naming for PCA and MDS.
+  DF$sample.size.spot <- paste(DF$sample, " ", DF$size, " ", DF$spot, sep="")
+
+# Create chondrite normalized REE values for plotting REE patterns.
+  DF <- ChondriteNormalization(DF)
+
+# Calculate temperature in °C using Ferry and Watson (2007) Ti-in-zircon 
+# thermometer and save as a column in data frame.
+  DF$temperature <- (-4800 / (log10(DF$Ti) - 5.711 + log10(aSiO2) - 
+                     log10(aTiO2))) - 273.15
+
+# Sort the data frame by decreasing temperature.
+  DF <- DF[order(DF$temperature, decreasing = TRUE), ] 
+
+# Calculate trace element and REE ratios. Round temperature and 6/8 age columns.
+  DF <- CalculateRatios(DF)
+  # DF$SrY  <- DF$Sr/DF$Y         # Sr/Y (for ttn only)
+```
+
+Bivariate plots
+================================================================================
+`r sample.notes`
+
+Row
+--------------------------------------------------------------------------------
+
+### Probability Density Function (PDF) of LA-ICPMS ^206^Pb/^238^U Age
+```{r page1_1}
+PlotlySummedPDFZrn(DF)
+```
+
+### ^206^Pb/^238^U Age vs. Total REE
+```{r page1_2}
+PlotlyBivariateZrn(dataframe = DF,  
+                   x.value   = X_206Pb238U_age, 
+                   x.name    = "206Pb/238U Age (Ma)", 
+                   y.value   = sumREE, 
+                   y.name    = "Total REE (ppm)")
+```
+
+Row
+--------------------------------------------------------------------------------
+
+### Eu anomaly vs. Total REE
+```{r page1_3}
+PlotlyBivariateZrn(dataframe = DF,  
+                   x.value   = EuEustar, 
+                   x.name    = "Eu/Eu*", 
+                   y.value   = sumREE, 
+                   y.name    = "Total REE (ppm)")
+```
+
+### Dy anomaly vs. Total REE
+```{r page1_4}
+PlotlyBivariateZrn(dataframe = DF,  
+                   x.value   = DyDystar, 
+                   x.name    = "Dy/Dy*", 
+                   y.value   = sumREE, 
+                   y.name    = "Total REE (ppm)")
+```
+
+Row
+--------------------------------------------------------------------------------
+
+### U vs. Total REE
+```{r page1_5}
+PlotlyBivariateZrn(dataframe = DF,  
+                   x.value   = U, 
+                   x.name    = "U (ppm)", 
+                   y.value   = sumREE, 
+                   y.name    = "Total REE (ppm)")
+```
+
+### Th/U vs. Total REE
+```{r page1_6}
+PlotlyBivariateZrn(dataframe = DF,  
+                   x.value   = ThU, 
+                   x.name    = "Th/U", 
+                   y.value   = sumREE, 
+                   y.name    = "Total REE (ppm)")
+```
+
+Row
+--------------------------------------------------------------------------------
+
+### Lu/Hf vs. Total REE
+```{r page1_7}
+PlotlyBivariateZrn(dataframe = DF,  
+                   x.value   = LuHf, 
+                   x.name    = "Lu/Hf", 
+                   y.value   = sumREE, 
+                   y.name    = "Total REE (ppm)")
+```
+
+### Zr/Hf vs. Total REE
+```{r page1_8}
+PlotlyBivariateZrn(dataframe = DF,  
+                   x.value   = ZrHf, 
+                   x.name    = "Zr/Hf", 
+                   y.value   = sumREE, 
+                   y.name    = "Total REE (ppm)")
+```
+
+Row
+--------------------------------------------------------------------------------
+
+### Nb/Th vs. Total REE
+```{r page1_9}
+PlotlyBivariateZrn(dataframe = DF,  
+                   x.value   = NbTh, 
+                   x.name    = "Nb/Th", 
+                   y.value   = sumREE, 
+                   y.name    = "Total REE (ppm)")
+```
+
+### Nb/Ta vs. Total REE
+```{r page1_10}
+PlotlyBivariateZrn(dataframe = DF,  
+                   x.value   = NbTa, 
+                   x.name    = "Nb/Ta", 
+                   y.value   = sumREE, 
+                   y.name    = "Total REE (ppm)")
+```
+
+
+REE plots
+================================================================================
+`r sample.notes`  
+REE plots are colored by the same temperature scaled used for the bivariate plots.
+
+Row
+--------------------------------------------------------------------------------
+```{r REE_setup, include = FALSE}
+# Resort the data frame by increasing temperature.
+  DF.REE <- DF[order(DF$temperature, decreasing = FALSE), ] 
+```
+
+### REE plot 1
+```{r page2_1}
+PlotlyREE(dataframe    = DF.REE,
+          start.sample = DF.REE[[(dim(DF.REE)[1] / 4 * 3 + 1), 
+                                 "sample.size.spot"]],
+          end.sample   = DF.REE[[(dim(DF.REE)[1]), "sample.size.spot"]])
+```
+
+### REE plot 2
+```{r page2_2}
+PlotlyREE(dataframe    = DF.REE,
+          start.sample = DF.REE[[(dim(DF.REE)[1] / 4 * 2 + 1), 
+                                 "sample.size.spot"]],
+          end.sample   = DF.REE[[(dim(DF.REE)[1] / 4 * 3), "sample.size.spot"]])
+```
+
+Row
+--------------------------------------------------------------------------------
+
+### REE plot 3
+```{r page2_3}
+PlotlyREE(dataframe    = DF.REE,
+          start.sample = DF.REE[[(dim(DF.REE)[1] / 4 + 1), "sample.size.spot"]],
+          end.sample   = DF.REE[[(dim(DF.REE)[1] / 4 * 2), "sample.size.spot"]])
+```
+
+### REE plot 4
+```{r page2_4}
+PlotlyREE(dataframe    = DF.REE,
+          start.sample = DF.REE[[1, "sample.size.spot"]],
+          end.sample   = DF.REE[[(dim(DF.REE)[1] / 4), "sample.size.spot"]])
+```
+
+
+
+PCA and MDS plots
+================================================================================
+`r sample.notes`  
+This section is in progress.
+
+
+Ternary plots  
+================================================================================
+`r sample.notes`  
+Values are normalized so that each axis ranges from 0 to 1.  
+
+Row
+-----------------------------------------------------------------------
+
+### U - Th/U - total REE
+```{r Ternary_U_ThU_totalREE}
+ternary1 <- plot_ly(DF, a = ~U, b = ~sumREE, c = ~ThU*1000) %>%
+     add_trace(type = 'scatterternary', mode = 'markers',
+               color = ~temperature, colors = rev(brewer.pal(n=11, name="Spectral")),                 
+               marker = list(size = 9), symbol = ~sample, symbols = c('circle', 'square-x-open','square','triangle-up','circle','circle-x-open'),
+               #size = ~temperature, sizes = c(1,25),
+               #evaluate = T,
+               text = ~paste(size, spot, '<br>Temperature (°C):', temperature_r, '<br>206Pb/238U Age:', X_206Pb238U_age_r, ' +/- ', X_206Pb238U_age_2sig_r)) %>%
+     layout(title = "", showlegend = T,
+            xaxis = list(title = "", showgrid = F, zeroline = F, showticklabels = F),
+            yaxis = list(title = "", showgrid = F, zeroline = F, showticklabels = F),
+            sum = 100,
+            ternary = list(
+                 aaxis = list(title = "U (ppm)", tickformat = ".0%", tickfont = list(size = 10), titlefont = list(size = 11)),
+                 baxis = list(title = paste("Total REE (ppm)"), tickformat = ".0%", tickfont = list(size = 10), titlefont = list(size = 11)),
+                 caxis = list(title = "Th/U x1000", tickformat = ".0%", tickfont = list(size = 10), titlefont = list(size = 11)))) %>%
+     colorbar(title = "Temperature (°C)")
+ternary1
+
+```
+
+### U - Th/U - Eu/Eu Anomaly
+
+### Ti - Nb/Th - total REE
+
+### Total REE - Th/U - Eu Anomaly
+
+### Total REE - Y - Eu Anomaly
+
+### Nb/Th - Y - Eu Anomaly
+
+### Nb/Th - Th/U - U
+
+### Total REE - Th/U - Lu/Hf
+
