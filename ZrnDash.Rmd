@@ -111,7 +111,7 @@ output:
   aSiO2 = 1       # set activity of SiO2
 
 # Set text to describe samples.
-sample.notes = "This is the template for creating a zircon geochemistry dashboard with TIMS data."
+sample.notes = "This is the template for creating a zircon geochemistry dashboard with LA-ICPMS data."
 ```
 
 ```{r calculate, include=FALSE}
