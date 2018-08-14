@@ -1,0 +1,349 @@
+---
+title: "TtnDash"
+output: 
+  flexdashboard::flex_dashboard:
+    orientation: rows
+    social: menu
+    vertical_layout: scroll
+---
+
+```{r setup, include=FALSE}
+# RMarkdown titanite geochronology dashboard template updated 2018.08.13 CH.
+
+# install missing packages, load packages
+  # knitr for assembling RMarkdown documents
+  if(!require(knitr)){install.packages("knitr")}  # install
+  library(knitr)  # load
+  # ggplot for making graphs
+  if(!require(ggplot2)){install.packages("ggplot2", dependencies = TRUE)}
+  library(ggplot2)  # load
+  # plyr for combining data frames, displaying dashboard
+  if(!require(plyr)){install.packages("plyr")}  # install
+  library(plyr)  # load
+  # dplyr for making plotly work
+  if(!require(dplyr)){install.packages("dplyr", dependencies = TRUE)} 
+  library(dplyr)  # load
+  # plotly for making interactive graphs
+  if(!require(plotly)){install.packages("plotly", dependencies = TRUE)} 
+  library(plotly)  # load
+  # flexdashboard for making dashboards
+  if(!require(flexdashboard)){install.packages("flexdashboard")}  # install
+  library(flexdashboard)  # load
+  # RColorBrewer package for color palette
+  if(!require(RColorBrewer)){install.packages("RColorBrewer")}  # install
+  library(RColorBrewer)  # load
+  # reshape2 for melting data frames
+  if(!require(reshape2)){install.packages("reshape2")}  # install
+  library(reshape2)  # load
+  # leaflet extracts color codes from a palette given a value (for REE plots)
+  if(!require(leaflet)){install.packages("leaflet")}  # install
+  library(leaflet)  # load
+  # ggfortify for plotting output of MDS
+  if(!require(ggfortify)){install.packages("ggfortify")}  # install
+  library(ggfortify)  # load
+  # BBmisc for normalizing data frame function
+  if(!require(BBmisc)){install.packages("BBmisc")}  # install
+  library(BBmisc)  # load
+
+# clear all from workspace/environment
+  rm(list=ls())
+
+# Set universal settings. 
+  # For all code chunks, omit code in knited document and hide messages and 
+  # warnings.
+  knitr::opts_chunk$set(echo=FALSE, message=FALSE, warning=FALSE) 
+
+  # Set working directory.
+  knitr::opts_knit$set(root.dir = 
+  "/Users/claireharrigan/Dropbox/IGL + Research/R/graphit/")
+```
+
+```{r import, include=FALSE}
+# functions required:
+  source("ImportZirconFDT.R") # for importing and cleaning up files
+  source("SplitAnalysis.R") # for cleaning up LA-ICPMS analysis strings 
+  
+# Import zircon LA-ICPMS data.
+  # First, save your final data table as a .csv file with the values as numbers
+  # with many decimal places.
+  # Type file.choose() in the console, then hit enter to select the file. Copy
+  # and paste the resulting filepath into the function below.
+  DF <- ImportZirconFDT("/Users/claireharrigan/Dropbox/IGL + Research/WISZ/Results/14WZ3-2 LGCC Gpg/zircon/Geochemistry/zircon_14WZ3-2_LA-ICPMS FDT.csv")
+  # Apply the SplitAnalysis function to the analysis column and save the results
+  # as a temporary dataframe.
+  tempDF <- SplitAnalysis(column.name = DF$analysis) 
+  # Save sample name from temporary dataframe into the main dataframe.
+  DF$sample <- tempDF$samp.name
+  # Save mount size from temporary dataframe into the main dataframe.
+  DF$size <- tempDF$size 
+  # Save spot number from temporary datafrae into the main dataframe.
+  DF$spot <- tempDF$spot 
+  # OPTIONALL Remove spots that are not zircon (uncomment next line and edit).
+  #DF <- subset(DF, spot != 135)
+  rm(tempDF)  # remove temporary data frame from environment
+
+# OPTIONAL: Import a second zircon LA-ICPMS final data table 
+# Uncomment this section and edit filepath of the next line to import a second
+# final data table.
+  # DF2 <- Import("/Users/claireharrigan/Dropbox/IGL + Research/WISZ/Results/14WZ3-2 LGCC Gpg/zircon/Geochemistry/zircon_14WZ3-2_LA-ICPMS FDT.csv")
+  # # Apply the SplitAnalysis function to the analysis column and save the results
+  # # as a temporary dataframe.
+  # tempDF2 <- SplitAnalysis(column.name = DF2$analysis) 
+  # # Save sample name from temporary dataframe into the main dataframe.
+  # DF2$sample <- tempDF2$samp.name
+  # # Save mount size from temporary dataframe into the main dataframe.
+  # DF2$size <- tempDF2$size 
+  # # Save spot number from temporary datafrae into the main dataframe.
+  # DF2$spot <- tempDF2$spot 
+  # # Remove spots that are not zircon (optional--uncomment next line and edit).
+  # #DF2 <- subset(DF2, spot != 135)
+  # rm(tempDF2)  # remove temporary data frame from environment
+
+# OPTIONAL: Bind all imported data frames together and remove extra data frames.
+# Uncomment the following section if importing multiple final data tables.
+  # DF <- rbind.fill(DF, DF2)  # Combine using rbind.fill function from plyr.
+  # rm(DF2)  # Remove individual sample data frames.
+```
+
+```{r set_values, include=FALSE}
+# Set values for Ti-in-zircon thermometer.
+  aTiO2 = 0.7     # set activity of TiO2
+  aSiO2 = 1       # set activity of SiO2
+
+# Set text to describe samples.
+sample.notes = "This is the template for creating a zircon geochemistry dashboard with TIMS data."
+```
+
+```{r calculate, include=FALSE}
+# functions required for calculations and plotting:
+  source("ChondriteNormalization.R")  # for normalizing REE values
+  source("CalculateRatios.R")  # for calculating trace element ratios
+  source("PlotlyBivariateZrn.R")  # for making interactive bivariate plots
+  source("PlotlySummedPDFZrn.R")  # for making interactive summed PDF
+  source("PlotlyREE.R")  # for making interactive REE plots
+
+# Create new columns based on sample, size, and spot information.
+  # Create "size spot" column for unique naming for PCA and MDS (ex. "M 132").
+  DF$size.spot <- paste(DF$size, " ", DF$spot, sep="") # create 
+  # Create "sample size spot" column for unique naming for PCA and MDS.
+  DF$sample.size.spot <- paste(DF$sample, " ", DF$size, " ", DF$spot, sep="")
+
+# Create chondrite normalized REE values for plotting REE patterns.
+  DF <- ChondriteNormalization(DF)
+
+# Calculate temperature in °C using Ferry and Watson (2007) Ti-in-zircon 
+# thermometer and save as a column in data frame.
+  DF$temperature <- (-4800 / (log10(DF$Ti) - 5.711 + log10(aSiO2) - 
+                     log10(aTiO2))) - 273.15
+
+# Sort the data frame by decreasing temperature.
+  DF <- DF[order(DF$temperature, decreasing = TRUE), ] 
+
+# Calculate trace element and REE ratios. Round temperature and 6/8 age columns.
+  DF <- CalculateRatios(DF)
+  # DF$SrY  <- DF$Sr/DF$Y         # Sr/Y (for ttn only)
+```
+
+Bivariate plots
+================================================================================
+`r sample.notes`
+
+Row
+--------------------------------------------------------------------------------
+
+### Probability Density Function (PDF) of LA-ICPMS ^206^Pb/^238^U Age
+```{r page1_1}
+PlotlySummedPDFZrn(DF)
+```
+
+### ^206^Pb/^238^U Age vs. Total REE
+```{r page1_2}
+PlotlyBivariateZrn(dataframe = DF,  
+                   x.value   = X_206Pb238U_age, 
+                   x.name    = "206Pb/238U Age (Ma)", 
+                   y.value   = sumREE, 
+                   y.name    = "Total REE (ppm)")
+```
+
+Row
+--------------------------------------------------------------------------------
+
+### Eu anomaly vs. Total REE
+```{r page1_3}
+PlotlyBivariateZrn(dataframe = DF,  
+                   x.value   = EuEustar, 
+                   x.name    = "Eu/Eu*", 
+                   y.value   = sumREE, 
+                   y.name    = "Total REE (ppm)")
+```
+
+### Dy anomaly vs. Total REE
+```{r page1_4}
+PlotlyBivariateZrn(dataframe = DF,  
+                   x.value   = DyDystar, 
+                   x.name    = "Dy/Dy*", 
+                   y.value   = sumREE, 
+                   y.name    = "Total REE (ppm)")
+```
+
+Row
+--------------------------------------------------------------------------------
+
+### U vs. Total REE
+```{r page1_5}
+PlotlyBivariateZrn(dataframe = DF,  
+                   x.value   = U, 
+                   x.name    = "U (ppm)", 
+                   y.value   = sumREE, 
+                   y.name    = "Total REE (ppm)")
+```
+
+### Th/U vs. Total REE
+```{r page1_6}
+PlotlyBivariateZrn(dataframe = DF,  
+                   x.value   = ThU, 
+                   x.name    = "Th/U", 
+                   y.value   = sumREE, 
+                   y.name    = "Total REE (ppm)")
+```
+
+Row
+--------------------------------------------------------------------------------
+
+### Lu/Hf vs. Total REE
+```{r page1_7}
+PlotlyBivariateZrn(dataframe = DF,  
+                   x.value   = LuHf, 
+                   x.name    = "Lu/Hf", 
+                   y.value   = sumREE, 
+                   y.name    = "Total REE (ppm)")
+```
+
+### Zr/Hf vs. Total REE
+```{r page1_8}
+PlotlyBivariateZrn(dataframe = DF,  
+                   x.value   = ZrHf, 
+                   x.name    = "Zr/Hf", 
+                   y.value   = sumREE, 
+                   y.name    = "Total REE (ppm)")
+```
+
+Row
+--------------------------------------------------------------------------------
+
+### Nb/Th vs. Total REE
+```{r page1_9}
+PlotlyBivariateZrn(dataframe = DF,  
+                   x.value   = NbTh, 
+                   x.name    = "Nb/Th", 
+                   y.value   = sumREE, 
+                   y.name    = "Total REE (ppm)")
+```
+
+### Nb/Ta vs. Total REE
+```{r page1_10}
+PlotlyBivariateZrn(dataframe = DF,  
+                   x.value   = NbTa, 
+                   x.name    = "Nb/Ta", 
+                   y.value   = sumREE, 
+                   y.name    = "Total REE (ppm)")
+```
+
+
+REE plots
+================================================================================
+`r sample.notes`  
+REE plots are colored by the same temperature scaled used for the bivariate plots.
+
+Row
+--------------------------------------------------------------------------------
+```{r REE_setup, include = FALSE}
+# Resort the data frame by increasing temperature.
+  DF.REE <- DF[order(DF$temperature, decreasing = FALSE), ] 
+```
+
+### REE plot 1
+```{r page2_1}
+PlotlyREE(dataframe    = DF.REE,
+          start.sample = DF.REE[[(dim(DF.REE)[1] / 4 * 3 + 1), 
+                                 "sample.size.spot"]],
+          end.sample   = DF.REE[[(dim(DF.REE)[1]), "sample.size.spot"]])
+```
+
+### REE plot 2
+```{r page2_2}
+PlotlyREE(dataframe    = DF.REE,
+          start.sample = DF.REE[[(dim(DF.REE)[1] / 4 * 2 + 1), 
+                                 "sample.size.spot"]],
+          end.sample   = DF.REE[[(dim(DF.REE)[1] / 4 * 3), "sample.size.spot"]])
+```
+
+Row
+--------------------------------------------------------------------------------
+
+### REE plot 3
+```{r page2_3}
+PlotlyREE(dataframe    = DF.REE,
+          start.sample = DF.REE[[(dim(DF.REE)[1] / 4 + 1), "sample.size.spot"]],
+          end.sample   = DF.REE[[(dim(DF.REE)[1] / 4 * 2), "sample.size.spot"]])
+```
+
+### REE plot 4
+```{r page2_4}
+PlotlyREE(dataframe    = DF.REE,
+          start.sample = DF.REE[[1, "sample.size.spot"]],
+          end.sample   = DF.REE[[(dim(DF.REE)[1] / 4), "sample.size.spot"]])
+```
+
+
+
+PCA and MDS plots
+================================================================================
+`r sample.notes`  
+This section is in progress.
+
+
+Ternary plots  
+================================================================================
+`r sample.notes`  
+Values are normalized so that each axis ranges from 0 to 1.  
+
+Row
+-----------------------------------------------------------------------
+
+### U - Th/U - total REE
+```{r Ternary_U_ThU_totalREE}
+ternary1 <- plot_ly(DF, a = ~U, b = ~sumREE, c = ~ThU*1000) %>%
+     add_trace(type = 'scatterternary', mode = 'markers',
+               color = ~temperature, colors = rev(brewer.pal(n=11, name="Spectral")),                 
+               marker = list(size = 9), symbol = ~sample, symbols = c('circle', 'square-x-open','square','triangle-up','circle','circle-x-open'),
+               #size = ~temperature, sizes = c(1,25),
+               #evaluate = T,
+               text = ~paste(size, spot, '<br>Temperature (°C):', temperature_r, '<br>206Pb/238U Age:', X_206Pb238U_age_r, ' +/- ', X_206Pb238U_age_2sig_r)) %>%
+     layout(title = "", showlegend = T,
+            xaxis = list(title = "", showgrid = F, zeroline = F, showticklabels = F),
+            yaxis = list(title = "", showgrid = F, zeroline = F, showticklabels = F),
+            sum = 100,
+            ternary = list(
+                 aaxis = list(title = "U (ppm)", tickformat = ".0%", tickfont = list(size = 10), titlefont = list(size = 11)),
+                 baxis = list(title = paste("Total REE (ppm)"), tickformat = ".0%", tickfont = list(size = 10), titlefont = list(size = 11)),
+                 caxis = list(title = "Th/U x1000", tickformat = ".0%", tickfont = list(size = 10), titlefont = list(size = 11)))) %>%
+     colorbar(title = "Temperature (°C)")
+ternary1
+
+```
+
+### U - Th/U - Eu/Eu Anomaly
+
+### Ti - Nb/Th - total REE
+
+### Total REE - Th/U - Eu Anomaly
+
+### Total REE - Y - Eu Anomaly
+
+### Nb/Th - Y - Eu Anomaly
+
+### Nb/Th - Th/U - U
+
+### Total REE - Th/U - Lu/Hf
+
