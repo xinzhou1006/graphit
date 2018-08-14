@@ -55,7 +55,7 @@ output:
 
   # Set working directory.
   knitr::opts_knit$set(root.dir = 
-  "/Users/claireharrigan/Dropbox/IGL + Research/R/Functions/")
+  "/Users/claireharrigan/Dropbox/IGL + Research/R/graphit/")
 ```
 
 ```{r import, include=FALSE}
