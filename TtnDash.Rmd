@@ -60,7 +60,7 @@ output:
 
 ```{r import, include=FALSE}
 # functions required:
-  source("ImportZirconFDT.R") # for importing and cleaning up files
+  source("Import.R") # for importing and cleaning up files
   source("SplitAnalysis.R") # for cleaning up LA-ICPMS analysis strings 
   
 # Import zircon LA-ICPMS data.
@@ -106,12 +106,13 @@ output:
 ```
 
 ```{r set_values, include=FALSE}
-# Set values for Ti-in-zircon thermometer.
+# Set values for Zr-in-titanite thermobarometer.
   aTiO2 = 0.7     # set activity of TiO2
   aSiO2 = 1       # set activity of SiO2
-
+  pressure = 0.44 # set pressure estimate (in GPa) 
+  
 # Set text to describe samples.
-sample.notes = "This is the template for creating a zircon geochemistry dashboard with TIMS data."
+sample.notes = "This is the template for creating a titanite geochemistry dashboard with LA-ICPMS data."
 ```
 
 ```{r calculate, include=FALSE}
