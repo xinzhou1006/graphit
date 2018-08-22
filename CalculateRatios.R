@@ -1,6 +1,6 @@
 # The CalculateRatios function takes a LA-ICPMS final data table and 
 # calculates geochemical ratios. 
-# Updated 2018.07.25 CO.
+# Updated 2018.08.22 CH.
 
 # INPUTS:  dataframe = data frame containing LA-ICPMS data
 # OUTPUTS: DF        = data frame with all values that were input into the
@@ -32,11 +32,5 @@ CalculateRatios <- function(dataframe){
                                "Ho","Er","Tm","Yb","Lu")], na.rm=T) 
   # Round temperature values to one decimal place (useful for labeling).
   DF$temperature_r <- round(DF$temperature, digits = 1) 
-  # Round 6/8 values to one decimal place (useful for labeling).
-  DF$X_206Pb238U_age_r <- 
-    round(DF$X_206Pb238U_age, digits = 1) 
-  # Round 6/8-2sig values to one decimal place (useful for labeling).
-  DF$X_206Pb238U_age_2sig_r <- 
-    round(DF$X_206Pb238U_age_2sig, digits = 1) 
   return(DF)
 }
