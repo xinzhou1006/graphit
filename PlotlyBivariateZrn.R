@@ -1,6 +1,6 @@
 # The PlotlyBivariateZrn function makes makes an interactive bivariate 
 # scatter plot of zrn LA-ICPMS data colored by temperature.
-# Updated 2018.07.25 CO.
+# Updated 2018.08.22 CH.
 
 # INPUTS:  dataframe      = data frame containing values for x and y, 
 #                           in form DF, defaults to DF
@@ -52,10 +52,10 @@ PlotlyBivariateZrn <- function(dataframe = DF,
                                               'diamond'),
                                   hoverinfo = 'text',
                                   text = ~paste(sample.size.spot,
-                                                '<br>LA-ICPMS 206Pb/238U age: ',
-                                                X_206Pb238U_age_r,
+                                                '<br>LA-ICPMS age: ',
+                                                Age_round,
                                                 ' ± ',
-                                                X_206Pb238U_age_2sig_r,
+                                                Age2sig_round,
                                                 ' Ma<br>Temperature: ',
                                                 temperature_r, '°C',
                                                 sep = '')) %>%
