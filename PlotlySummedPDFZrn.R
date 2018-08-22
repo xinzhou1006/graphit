@@ -1,10 +1,11 @@
 # The PlotlySummedPDFZrn function makes makes an interactive PDF plot of 
-# LA-ICPMS data.
-# Updated 2018.05.21 CO.
+# LA-ICPMS age (based on the Age and Age2sig columns in a data frame)
+# Updated 2018.08.22 CH.
 
-# INPUTS:  dataframe        = data frame containing ages, 
+# INPUTS:  dataframe        = data frame containing ages (column labeled as Age,
+#                             associated errors in a column labeled Age2sig), 
 #                             in form DF, defaults to DF
-# OUTPUTS: plotly.summedPDF = plot of 206Pb/238U LA-ICPMS ages 
+# OUTPUTS: plotly.summedPDF = plot of LA-ICPMS ages 
 
 PlotlySummedPDFZrn <- function(dataframe = DF) {
   
