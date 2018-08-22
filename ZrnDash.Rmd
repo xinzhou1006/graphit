@@ -87,7 +87,9 @@ output:
 # OPTIONAL: Import a second zircon LA-ICPMS final data table 
 # Uncomment this section and edit filepath of the next line to import a second
 # final data table.
-  # DF2 <- Import("/Users/claireharrigan/Dropbox/IGL + Research/WISZ/Results/14WZ3-2 LGCC Gpg/zircon/Geochemistry/zircon_14WZ3-2_LA-ICPMS FDT.csv")
+  # ImportedDF2 <- Import("/Users/claireharrigan/Dropbox/IGL + Research/WISZ/Results/14WZ3-2 LGCC Gpg/zircon/Geochemistry/zircon_14WZ3-2_LA-ICPMS FDT.csv")
+  # # Save a data frame of LA-ICPMS samples only (no standards).
+  # DF2 <- ImportedDF2[[1]]
   # # Apply the SplitAnalysis function to the analysis column and save the results
   # # as a temporary dataframe.
   # tempDF2 <- SplitAnalysis(column.name = DF2$analysis) 
