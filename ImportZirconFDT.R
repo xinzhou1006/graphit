@@ -135,6 +135,16 @@ ImportZirconFDT <- function(filepath){
   DF <- subset(DF, !(startsWith(as.character(analysis), "AUS Z2")))
   DF <- subset(DF, !(startsWith(as.character(analysis), "R33")))
   DF <- subset(DF, !(startsWith(as.character(analysis), "PL")))
+  DF <- subset(DF, !(startsWith(as.character(analysis), "Zirconia")))
+  DF <- subset(DF, !(startsWith(as.character(analysis), "AN2")))
+  DF <- subset(DF, !(startsWith(as.character(analysis), "FC1")))
+  DF <- subset(DF, !(startsWith(as.character(analysis), "91500")))
+  DF <- subset(DF, !(startsWith(as.character(analysis), "Temora")))
+  DF <- subset(DF, !(startsWith(as.character(analysis), "Seiland")))
+  DF <- subset(DF, !(startsWith(as.character(analysis), "NIST 614")))
+  DF <- subset(DF, !(startsWith(as.character(analysis), "NIST614")))
+  DF <- subset(DF, !(startsWith(as.character(analysis), "BCR")))
+  DF <- subset(DF, !(startsWith(as.character(analysis), "BIR")))
 
   # Return the cleaned up data frames.
   return(DF, DF.std) 
