@@ -12,8 +12,8 @@ PlotlySummedPDFZrn <- function(dataframe = DF) {
   DF <- dataframe
   
   # Find max and min ages of y axis.
-  max.age <- max(DF$X_206Pb238U_age) + 5 * median(DF$X_206Pb238U_age_2sig)
-  min.age <- min(DF$X_206Pb238U_age) - 5 * median(DF$X_206Pb238U_age_2sig)
+  max.age <- max(DF$Age) + 5 * median(DF$Age2sig)
+  min.age <- min(DF$Age) - 5 * median(DF$Age2sig)
   
   # Use compound.prob function to create a summed pdf from 0 Ma to 500 Ma
   # INPUTS:      ages = a vector of ages
@@ -33,26 +33,20 @@ PlotlySummedPDFZrn <- function(dataframe = DF) {
   }
   
   # Calculate PDFs of LA-ICPMS data using the compound.prob function above.
-  P.68 <- compound.prob(DF$X_206Pb238U_age, 
-                        DF$X_206Pb238U_age_2sig) 
-  # Combine probabilities into one data frame.
-  # Create a new dataframe named P.
-  P <- P.68 
-  # Save 206Pb/238U probability under a more clear name
-  names(P)[names(P) == 'probability'] <- 'prob.206Pb238U'
+  P <- compound.prob(DF$Age, DF$Age2sig) 
   # Scale the column by the max value in the column so the y axis will have a 
   # max value of 1.
-  P$prob.206Pb238U.scaled <- P.68$probability / max(P.68$probability) 
+  P$probability.scaled <- P$probability / max(P$probability) 
   
   # Make plot.
   plot.summedPDF <- plot_ly(P, 
                             x = ~x, 
-                            y = ~prob.206Pb238U.scaled, 
-                            name = "206Pb/238U",
+                            y = ~probability.scaled, 
+                            name = "Age",
                             type = 'scatter', 
                             mode = 'lines', 
                             line = list(dash = "solid", color = "black")) %>%
-    layout(xaxis = list(title = "206Pb/238U age (Ma)"), 
+    layout(xaxis = list(title = "Age (Ma)"), 
            yaxis = list(title = "Relative Probability", 
                         showticklabels = F))
   
