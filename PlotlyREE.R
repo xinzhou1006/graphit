@@ -1,6 +1,6 @@
 # The PlotlyREE function makes an interactive chondrite-normalized REE plot 
 # with plotly. 
-# Updated 2018.08.13 CH.
+# Updated 2018.08.22 CH.
 
 # INPUTS:  dataframe    = data frame containing REE values, defaults to DF
 #          sample.name  = same name for titling plot, in form "14WZ3-2"
@@ -20,16 +20,18 @@ PlotlyREE <- function(dataframe = DF,
                                                Pm_CN, Sm_CN, Eu_CN, Gd_CN, 
                                                Tb_CN, Dy_CN, Ho_CN, Er_CN, 
                                                Tm_CN, Yb_CN, Lu_CN, 
-                                               temperature_r)))) 
+                                               temperature_r, 
+                                               Age_round, Age2sig_round)))) 
   # Name DF.REE columns with size and spot info from DF.
   colnames(DF.REE) <- t(DF$sample.size.spot) 
   # Name DF.REE rows with REE labels.
   DF.REE$REE <- c("La", "Ce", "Pr", "Nd", "Pm", "Sm", "Eu", "Gd", "Tb", "Dy",
-                  "Ho", "Er", "Tm", "Yb", "Lu", "Zr-in-ttn T") 
+                  "Ho", "Er", "Tm", "Yb", "Lu", "Temperature", "Age_round", 
+                  "Age2sig_round") 
   # Create a vector of spacing for REE based on ionic radius (Shannon, 1976)
   DF.REE$ionic.radius <- c(1.160, 1.143, 1.126, 1.109, 1.093, 1.079, 1.066,
                            1.053, 1.040, 1.027, 1.015, 1.004, 0.994, 0.985,
-                           0.977, NA) 
+                           0.977, NA, NA, NA) 
   # Rearrange colums so it goes position, ionic radius, all the samples.
   DF.REE <- DF.REE[c((ncol(DF.REE) - 1), (ncol(DF.REE)), 1:(ncol(DF.REE) - 2))] 
   # Save column names from DF.REE (needed for binding temperature color codes 
@@ -75,10 +77,10 @@ PlotlyREE <- function(dataframe = DF,
   for(n in start_col:end_col) { 
     # On the first iteration, make the starting string with the plot_ly command.
     if(n == start_col) { 
-      select.String <- paste('plot_ly(data = DF.REE, x = ~DF.REE[, "ionic.radius"], y = ~DF.REE[, start_col], name = start.sample, type = "scatter", mode = "lines", line = list(color = DF.REE.color["colorvalue",start.sample], width = 3), hoverinfo = "text", text = ~paste(colnames(DF.REE[', n, ']),"<br>Zr-in-ttn T: ", DF.REE.color["temperature_r",', n, '],"°C"))', sep='') 
+      select.String <- paste('plot_ly(data = DF.REE, x = ~DF.REE[, "ionic.radius"], y = ~DF.REE[, start_col], name = start.sample, type = "scatter", mode = "lines", line = list(color = DF.REE.color["colorvalue",start.sample], width = 3), hoverinfo = "text", text = ~paste(colnames(DF.REE[', n, ']),"<br>Age: ", DF.REE["Age_round",', n, '], " ± ", DF.REE["Age2sig_round",', n, '], " Ma","<br>Temperature: ", DF.REE.color["temperature_r",', n, '],"°C"))', sep='') 
       # On every other iteration, add traces for each subsequent spot.
     } else {
-      select.String <-paste(select.String,' %>% add_trace(y = ~(DF.REE[,', n, ']), mode = "lines", name = colnames(DF.REE[', n, ']), line = list(color = DF.REE.color["colorvalue",', n, '], width = 3), hoverinfo = "text", text = ~paste(colnames(DF.REE[', n, ']),"<br>Zr-in-ttn T: ", DF.REE.color["temperature_r",', n, '],"°C"))', sep = '') 
+      select.String <-paste(select.String,' %>% add_trace(y = ~(DF.REE[,', n, ']), mode = "lines", name = colnames(DF.REE[', n, ']), line = list(color = DF.REE.color["colorvalue",', n, '], width = 3), hoverinfo = "text", text = ~paste(colnames(DF.REE[', n, ']),"<br>Age: ", DF.REE["Age_round",', n, '], " ± ", DF.REE["Age2sig_round",', n, '], " Ma","<br>Temperature: ", DF.REE.color["temperature_r",', n, '],"°C"))', sep = '') 
     }
   }
   # Set up the layout of the plot.     
