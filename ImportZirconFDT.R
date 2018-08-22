@@ -2,7 +2,7 @@
 # Lab LA-ICPMS final data table (FDT) and imports it cleans it up. REE and trace 
 # element calculations are removed, and isotopic calculations from the Excel 
 # UPbR reduction are preserved.
-# Updated 2018.08.21 CH.
+# Updated 2018.08.22 CH.
 
 # INPUTS:  filepath = type file.choose() into the console 
 #                     to determine the file path of csv to import
@@ -147,5 +147,5 @@ ImportZirconFDT <- function(filepath){
   DF <- subset(DF, !(startsWith(as.character(analysis), "BIR")))
 
   # Return the cleaned up data frames.
-  return(DF, DF.std) 
+  return(list(DF, DF.std)) 
 }
