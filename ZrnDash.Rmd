@@ -68,7 +68,9 @@ output:
   # with many decimal places.
   # Type file.choose() in the console, then hit enter to select the file. Copy
   # and paste the resulting filepath into the function below.
-  DF <- ImportZirconFDT("/Users/claireharrigan/Dropbox/IGL + Research/WISZ/Results/14WZ3-2 LGCC Gpg/zircon/Geochemistry/zircon_14WZ3-2_LA-ICPMS FDT.csv")
+  ImportedDF <- ImportZirconFDT("/Users/claireharrigan/Dropbox/IGL + Research/Sierra Nevada/Results/17RF11 (Kmr)/17RF11-1 zrn_FDT.csv")
+  # Save a data frame of LA-ICPMS samples only (no standards).
+  DF <- ImportedDF[[1]]
   # Apply the SplitAnalysis function to the analysis column and save the results
   # as a temporary dataframe.
   tempDF <- SplitAnalysis(column.name = DF$analysis) 
@@ -139,9 +141,17 @@ sample.notes = "This is the template for creating a zircon geochemistry dashboar
 # Sort the data frame by decreasing temperature.
   DF <- DF[order(DF$temperature, decreasing = TRUE), ] 
 
-# Calculate trace element and REE ratios. Round temperature and 6/8 age columns.
+# Calculate trace element and REE ratios. Round temperature.
   DF <- CalculateRatios(DF)
   # DF$SrY  <- DF$Sr/DF$Y         # Sr/Y (for ttn only)
+  
+# Make a new column in the data frame of your preferred age and error.
+  DF$Age <- DF$Age_CalibError_206Pb238U
+  DF$Age2sig <- DF$Age_CalibError_206Pb238U_2sig
+  # Round these columns (save as new column) to one decimal place (useful for
+  # labeling).
+  DF$Age_round <- round(DF$Age, digits = 1)
+  DF$Age2sig_round <- round(DF$Age2sig, digits = 1)
 ```
 
 Bivariate plots
@@ -151,16 +161,16 @@ Bivariate plots
 Row
 --------------------------------------------------------------------------------
 
-### Probability Density Function (PDF) of LA-ICPMS ^206^Pb/^238^U Age
+### Probability Density Function (PDF) of LA-ICPMS Age
 ```{r page1_1}
 PlotlySummedPDFZrn(DF)
 ```
 
-### ^206^Pb/^238^U Age vs. Total REE
+### Age vs. Total REE
 ```{r page1_2}
 PlotlyBivariateZrn(dataframe = DF,  
-                   x.value   = X_206Pb238U_age, 
-                   x.name    = "206Pb/238U Age (Ma)", 
+                   x.value   = Age, 
+                   x.name    = "Age (Ma)", 
                    y.value   = sumREE, 
                    y.name    = "Total REE (ppm)")
 ```
@@ -253,7 +263,7 @@ PlotlyBivariateZrn(dataframe = DF,
 REE plots
 ================================================================================
 `r sample.notes`  
-REE plots are colored by the same temperature scaled used for the bivariate plots.
+REE plots are colored by the same temperature scale used for the bivariate plots.
 
 Row
 --------------------------------------------------------------------------------
@@ -296,7 +306,6 @@ PlotlyREE(dataframe    = DF.REE,
 ```
 
 
-
 PCA and MDS plots
 ================================================================================
 `r sample.notes`  
@@ -306,44 +315,5 @@ This section is in progress.
 Ternary plots  
 ================================================================================
 `r sample.notes`  
-Values are normalized so that each axis ranges from 0 to 1.  
-
-Row
------------------------------------------------------------------------
-
-### U - Th/U - total REE
-```{r Ternary_U_ThU_totalREE}
-ternary1 <- plot_ly(DF, a = ~U, b = ~sumREE, c = ~ThU*1000) %>%
-     add_trace(type = 'scatterternary', mode = 'markers',
-               color = ~temperature, colors = rev(brewer.pal(n=11, name="Spectral")),                 
-               marker = list(size = 9), symbol = ~sample, symbols = c('circle', 'square-x-open','square','triangle-up','circle','circle-x-open'),
-               #size = ~temperature, sizes = c(1,25),
-               #evaluate = T,
-               text = ~paste(size, spot, '<br>Temperature (°C):', temperature_r, '<br>206Pb/238U Age:', X_206Pb238U_age_r, ' +/- ', X_206Pb238U_age_2sig_r)) %>%
-     layout(title = "", showlegend = T,
-            xaxis = list(title = "", showgrid = F, zeroline = F, showticklabels = F),
-            yaxis = list(title = "", showgrid = F, zeroline = F, showticklabels = F),
-            sum = 100,
-            ternary = list(
-                 aaxis = list(title = "U (ppm)", tickformat = ".0%", tickfont = list(size = 10), titlefont = list(size = 11)),
-                 baxis = list(title = paste("Total REE (ppm)"), tickformat = ".0%", tickfont = list(size = 10), titlefont = list(size = 11)),
-                 caxis = list(title = "Th/U x1000", tickformat = ".0%", tickfont = list(size = 10), titlefont = list(size = 11)))) %>%
-     colorbar(title = "Temperature (°C)")
-ternary1
-
-```
-
-### U - Th/U - Eu/Eu Anomaly
-
-### Ti - Nb/Th - total REE
-
-### Total REE - Th/U - Eu Anomaly
-
-### Total REE - Y - Eu Anomaly
-
-### Nb/Th - Y - Eu Anomaly
-
-### Nb/Th - Th/U - U
-
-### Total REE - Th/U - Lu/Hf
+This section is in progress.
 
