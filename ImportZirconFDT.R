@@ -18,9 +18,9 @@ ImportZirconFDT <- function(filepath){
   # bad analysis).
   DF <- DF[rowSums(is.na(DF))<15,]
   # Remove duplicate U and Th concentrations and Th/U ratio.
-  DF <- subset(DF, select = -c(X3, X4, X6))
+  DF <- subset(DF, select = -c(X.1, X.2, X.4))
   # Remove columns of repeated sample names and rows that only displays aTiO2.
-  DF <- subset(DF, select = -c(X64, X80, X98, X132))
+  DF <- subset(DF, select = -c(X.62, activity..SiO2., WITH, X.127))
   # Remove chondrite normalized REE values and trace element ratios.
   # These calculations are done in the graphing templates.
   DF <- DF[, -c(55:81)]
