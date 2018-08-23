@@ -75,7 +75,7 @@ output:
   # with many decimal places.
   # Type file.choose() in the console, then hit enter to select the file. Copy
   # and paste the resulting filepath into the function below.
-  ImportedDF <- ImportZirconFDT("/Users/claireharrigan/Dropbox/IGL + Research/Sierra Nevada/Results/17RF11 (Kmr)/17RF11-1 zrn_FDT.csv")
+  ImportedDF <- ImportZirconFDT("17RF7-2 zrn_FDT.csv")
   # Save a data frame of LA-ICPMS samples only (no standards).
   DF <- ImportedDF[[1]]
   # Apply the SplitAnalysis function to the analysis column and save the results
@@ -349,7 +349,7 @@ Row
   # Do principal component analysis.
   # Center the matrix to make the SVD method like doing standard PCA via a
   # covariance matrix. Use pareto scaling. Pull out ten principal components.
-  pc.results <- pca(DF.PCA, scale = "pareto", center = TRUE, nPcs = 10)
+  pc.results <- pca(DF.PCA, scale = "uv", center = TRUE, nPcs = 10)
   # pc.test.1 <- pca(DF.PCA, scale = "uv", center = TRUE, nPcs = 10)
   
   # Store the results of the principal component analysis in a data frame for 
@@ -376,14 +376,18 @@ Row
   # Create a column of rounded cummulative percent for hovertext.
   PCA.results$CummulativePercent_round <- round(PCA.results$CummulativePercent 
                                                 * 100, digits = 1)
-  
+```
+
+```{r PCA_2, echo=FALSE, message=FALSE, warning=FALSE}
 # Make a scree plot.
   plot_ly(data = PCA.results, 
           x = ~PrincipalComponent, 
-          y = ~VariancePercent,
+          y = ~VariancePercent*100,
           name = "Variance percent",
           type = "bar",
-          marker = list(color = "gray"),
+          marker = list(color = "gray",
+                        line = list(color = "black",
+                                    width = 1)),
           hoverinfo = 'text',
           text = ~paste(PrincipalComponent,
                         "<br>Variance percent: ",
@@ -393,339 +397,161 @@ Row
                         sep = '')) %>%
     add_trace(data = PCA.results, 
               x = ~PrincipalComponent, 
-              y = ~VariancePercent, 
+              y = ~VariancePercent*100, 
               type = "scatter", 
               mode = "lines+markers", 
               line = list(color = "black"), 
               marker = list(color = "black")) %>%
     add_trace(data = PCA.results, 
               x = ~PrincipalComponent, 
-              y = ~CummulativePercent, 
+              y = ~CummulativePercent*100, 
               name = "Cummulative percent",
               type = "scatter", 
               mode = "lines+markers", 
-              line = list(color = "red"), 
+              line = list(color = "red", 
+                          dash = "dot"), 
               marker = list(color = "red")) %>%
     layout(xaxis = list(title = "Principal component"), 
-           yaxis = list(title = "Percentage of explained variance"))
-  
-  # need to change so y axis says 80% instead of 0.8  
-
-
-
-# 
-# data(iris)
-# ##  Usually some kind of scaling is appropriate
-# pcIr <- pca(iris, method="svd", nPcs=2)
-# pcIr <- pca(iris, method="nipals", nPcs=3, cv="q2")
-# ## Get a short summary on the calculated model
-# summary(pcIr)
-# plot(pcIr)
-# ## Scores and loadings plot
-# slplot(pcIr, sl=as.character(iris[,5]))
-# data(sample.ExpressionSet)
-# pc <- pca(sample.ExpressionSet)
-# df <- merge(scores(pc), pData(sample.ExpressionSet), by=0)
-# library(ggplot2)
-# ggplot(df, aes(PC1, PC2, shape=sex, color=type)) +
-#   geom_point() +
-#   xlab(paste("PC1", pc@R2[1] * 100, "% of variance")) +
-#   ylab(paste("PC2", pc@R2[2] * 100, "% of variance"))
-
-
+           yaxis = list(title = "Percentage of explained variance"),
+          bargap = 0)
 ```
 
-
-
-
-```{r MDS, echo=FALSE, message=FALSE, warning=FALSE}
-# # Set up for MDS and PCA 
-#   # Make data frame of variables to be included in MDS/PCA and for labeling.
-#   DF.PCA <- subset(DF, select = c(sample, sample.size.spot,
-#                                   Age_round, Age2sig_round, 
-#                                   Pbstar, Ti, Y, Zr, Nb, Lu, Hf, Ta, 
-#                                   Th, U, 
-#                                   La_CN, Ce_CN, Pr_CN, Nd_CN, Pm_CN, 
-#                                   Sm_CN, Eu_CN, Gd_CN, Tb_CN, Dy_CN, 
-#                                   Ho_CN, Er_CN, Tm_CN, Yb_CN, Lu_CN, 
-#                                   temperature_r, sumREE, 
-#                                   LaNd, GdLu, GdYb, ZrHf, LuHf, HfY, 
-#                                   YHo, ThU, ThY, NbTa, NbU, NbTh, 
-#                                   DyYb,
-#                                   CeCestar, EuEustar, DyDystar)) 
-# 
-#   # Make age and error character strings so they do not get normalized with the 
-#   # rest of the numeric data in the data frame.
-#   DF.PCA[["sample"]] <- as.character(DF.PCA[["sample"]])
-#   DF.PCA[["sample.size.spot"]] <- as.character(DF.PCA[["sample.size.spot"]])
-#   DF.PCA[["Age_round"]] <- as.character(DF.PCA[["Age_round"]])
-#   DF.PCA[["Age2sig_round"]] <- as.character(DF.PCA[["Age2sig_round"]]) 
-#   
-#   # Normalize numerical values (max = 1, min = 0 for each column).
-#   DF.PCA <- normalize(DF.PCA, method = "range", range = c(0,1)) 
-#   
-#   # Rename rows by sample, size, and spot for labeling later.
-#   row.names(DF.PCA) <- t(DF.PCA$sample.size.spot) 
-#   
-# # Uncomment the following lines to make MDS plots.  
-#   # # Transpose data frame so geochemical variables are rows.
-#   # DF.MDA <- t(DF.PCA) 
-#   # 
-#   # # Label rows with names that can be used later for labeling.
-#   # row.names(DF.MDA) <- c("Sample", "Sample Size Spot",
-#   #                        "Age", "Age Error (2 sigma)",
-#   #                        "Pb*", "Ti", "Y", "Zr", "Nb", "Lu", "Hf", "Ta", 
-#   #                        "Th", "U", 
-#   #                        "La (CN)", "Ce (CN)", "Pr (CN)", "Nd (CN)", "Pm (CN)", 
-#   #                        "Sm (CN)", "Eu (CN)", "Gd (CN)", "Tb (CN)", "Dy (CN)", 
-#   #                        "Ho (CN)", "Er (CN)", "Tm (CN)", "Yb (CN)", "Lu (CN)", 
-#   #                        "Temperature (°C)", "Total REE",
-#   #                        "La/Nd", "Gd/Lu", "Gd/Yb", "Zr/Hf", "Lu/Hf", "Hf/Y", 
-#   #                        "Y/Ho", "Th/U", "Th/Y", "Nb/Ta", "Nb/U", "Nb/Th", 
-#   #                        "Dy/Yb",
-#   #                        "Ce/Ce*", "Eu/Eu*", "Dy/Dy*")
-#   
-# # # Make MDS plot.
-# #   # Find the Euclidian distance between the rows.
-# #   dist.MDS <- dist(DF.MDA[10:dim(DF.MDA), ])
-# #   # Make plot.
-# #   ggplotly(autoplot(cmdscale(dist.MDS, eig = TRUE), 
-# #                     shape = FALSE, label = TRUE, label.size = 3))
-# # 
-# # # Make heatmap of Euclidian distance between the rows.  
-# #   autoplot(dist.MDS) + scale_fill_gradient(low = "white", high = "steelblue4")
-```
-
+### - 
 
 Row
 --------------------------------------------------------------------------------
-### PCA scree plot
 
-```{r PCA1, echo=FALSE, message=FALSE, warning=FALSE}
-# # Set up for PCA and PCA scree plot.
-#   # Do a principal component analysis on the numerical (not identifying) columns 
-#   # of the DF.PCA data frame.
-#   PCA.results <- prcomp(DF.PCA[, 10:(dim(DF.PCA)[2])], scale = TRUE) 
-#   
-#   # Create a data frame to store more results from PCA, particularly the 
-#   # eigenvalues and variance percents.
-#   eig.val <- data.frame(sdev = PCA.results$sdev, 
-#                         eigenvalue = PCA.results$sdev^2, 
-#                         variance.percent = (PCA.results$sdev^2 / 
-#                                               sum(PCA.results$sdev^2)) * 100, 
-#                         cummulative.percent = cumsum(PCA.results$sdev^2) / 
-#                                                 sum(PCA.results$sdev^2) * 100)
-#   
-#   # Initialize row name list.
-#   eig.val.rownames <- 0
-#   # Create a list of character strings that will be used for row names.
-#   for (n in 10:(dim(DF.PCA)[2])) {
-#     eig.val.rownames[n - 9] <- as.list(paste("PC ", n - 9, sep=""))} 
-#   # Save list of dimensions as row names in eig.val data frame
-#   rownames(eig.val) <- eig.val.rownames 
-#   # Save a column for labeling.
-#   eig.val$axlabs <- eig.val.rownames 
-#   
-#   # Round variance percent for hovertext.
-#   eig.val$variance.percent_r <- round(eig.val$variance.percent, digits = 2) 
-#   # Round cummulative percent for hovertext.
-#   eig.val$cummulative.percent_r <- round(eig.val$cummulative.percent, 
-#                                          digits = 2) 
-# 
-# # Make scree plot.
-# plot.scree <- plot_ly(data = eig.val, x = ~axlabs, y = ~variance.percent, # make scree bar plot
-#                       type = "bar", name = "variance percent", marker = list(color = "steelblue"),
-#                       text = ~paste("Variance percent: ", variance.percent_r, "%<br>Cummulative percent: ", cummulative.percent_r, "%", sep = "")) %>%
-#                add_trace(data = eig.val, x = ~axlabs, y = ~variance.percent, 
-#                       type = "scatter", mode = 'lines+markers', line = list(color = "black"), marker = list(color = "black")) %>%
-#                add_trace(data = eig.val, x = ~axlabs, y = ~cummulative.percent, name = "cummulative percent",
-#                       type = "scatter", mode = 'lines+markers', line = list(color = "gray"), marker = list(color = "gray")) %>%
-#                layout(xaxis = list(title = "Principal component"), yaxis = list(title = "Percentage of explained variance"))
-# plot.scree 
+### PC1 vs. PC2 score plot
+```{r PCA_3, echo=FALSE, message=FALSE, warning=FALSE}
+# Save PCA score data in new data frame.
+  PCA.scores <- as.data.frame(pc.results@scores)
+  # Save identifying information to PCA.scores data frame.
+  PCA.scores$sample <- DF.PCA$sample
+  PCA.scores$sample.size.spot <- DF.PCA$sample.size.spot
+  PCA.scores$temperature_r <- DF.PCA$temperature_r
+  PCA.scores$Age_round <- DF.PCA$Age_round
+  PCA.scores$Age2sig_round <- DF.PCA$Age2sig_round
+  
+# Make plot of PC1 vs. PC2 scores (PCA by sample).
+  plot_ly(data = PCA.scores, 
+          x = ~PC1,
+          y = ~PC2,
+          name = "sample.size.spot",
+          type = "scatter", 
+          mode = "markers",
+          marker = list(size = 12, 
+                        line = list(color = "black", 
+                                    width = 1)),
+          color = ~temperature_r, 
+          colors = rev(brewer.pal
+                       (n = 11, name = "Spectral")),
+          symbol = ~sample,
+          symbols = c('circle',
+                      'circle',
+                      'square',
+                      'triangle-up',
+                      'diamond'),
+          hoverinfo = 'text',
+          text = ~paste(sample.size.spot,
+                        '<br>LA-ICPMS age: ',
+                        Age_round,
+                        ' ± ',
+                        Age2sig_round,
+                        ' Ma<br>Temperature: ',
+                        temperature_r, '°C',
+                        sep = '')) %>%
+    colorbar(title = "Temperature (°C)") %>%
+    layout(xaxis = list(title = "PC1 Score"),
+           yaxis = list(title = "PC2 Score"))
 ```
 
+### PC1 vs. PC2 load plot
+```{r PCA_4, echo=FALSE, message=FALSE, warning=FALSE}
+# Save PCA loading data in new data frame.
+  PCA.loadings <- as.data.frame(pc.results@loadings)
+  # Save identifying information to PCA.loadings data frame.
+  PCA.loadings$variable <- c("Pb*", "Ti", "Y", "Zr", "Nb", "Lu", "Hf", "Ta",
+                             "Th", "U",
+                             "La (CN)", "Ce (CN)", "Pr (CN)", "Nd (CN)", 
+                             "Pm (CN)", "Sm (CN)", "Eu (CN)", "Gd (CN)", 
+                             "Tb (CN)", "Dy (CN)", "Ho (CN)", "Er (CN)", 
+                             "Tm (CN)", "Yb (CN)", "Lu (CN)",
+                             "Temperature (°C)", "Total REE",
+                             "La/Nd", "Gd/Lu", "Gd/Yb", "Zr/Hf", "Lu/Hf",
+                             "Hf/Y", "Y/Ho", "Th/U", "Th/Y", "Nb/Ta", "Nb/U", 
+                             "Nb/Th", "Dy/Yb",
+                             "Ce/Ce*", "Eu/Eu*", "Dy/Dy*")
 
-
+# Make plot of PC1 vs. PC2 loadings (PCA by variable).
+  plot_ly(data = PCA.loadings, 
+          x = ~PC1,
+          y = ~PC2,
+          name = "variable",
+          type = "scatter", 
+          mode = "markers",
+          marker = list(size = 12, 
+                        line = list(color = "black", 
+                                    width = 1)),
+          hoverinfo = 'text',
+          text = ~paste(variable)) %>%
+    layout(xaxis = list(title = "PC1 Load"),
+           yaxis = list(title = "PC2 Load"))
+```
 
 Row
-----------------------------------------------------------
-### Principal component analysis (PCA) scree plot
-```{r PCA1, echo=FALSE, message=FALSE, warning=FALSE}
-# PCA.results <- prcomp(DF.PCA[,10:(dim(DF.PCA)[2])], scale = TRUE) # do principal component analysis on the numerical (not identifying) columns of the DF.PCA data frame
-# eig.val <- data.frame(sdev = PCA.results$sdev, eigenvalue = PCA.results$sdev^2, variance.percent = (PCA.results$sdev^2/sum(PCA.results$sdev^2))*100, cummulative.percent = cumsum(PCA.results$sdev^2)/sum(PCA.results$sdev^2)*100) # create a data frame to store more results from PCA, particularly the eigenvalues and variance percents
-# eig.val.rownames <- 0 # initialize row name list
-# for (n in 10:(dim(DF.PCA)[2])) {eig.val.rownames[n-9] <- as.list(paste("PC ",n-9,sep=""))} # create a list of character strings that will be used for row names
-# rownames(eig.val) <- eig.val.rownames # save list of dimensions as row names in eig.val data frame
-# eig.val$axlabs <- eig.val.rownames # save a column for labeling
-# eig.val$variance.percent_r <- round(eig.val$variance.percent, digits = 2) # round variance percent for hovertext
-# eig.val$cummulative.percent_r <- round(eig.val$cummulative.percent, digits = 2) # round cummulative percent for hovertext
-# 
-# # make scree plot
-# plot.scree <- plot_ly(data = eig.val, x = ~axlabs, y = ~variance.percent, # make scree bar plot
-#                       type = "bar", name = "variance percent", marker = list(color = "steelblue"),
-#                       text = ~paste("Variance percent: ", variance.percent_r, "%<br>Cummulative percent: ", cummulative.percent_r, "%", sep = "")) %>%
-#                add_trace(data = eig.val, x = ~axlabs, y = ~variance.percent, 
-#                       type = "scatter", mode = 'lines+markers', line = list(color = "black"), marker = list(color = "black")) %>%
-#                add_trace(data = eig.val, x = ~axlabs, y = ~cummulative.percent, name = "cummulative percent",
-#                       type = "scatter", mode = 'lines+markers', line = list(color = "gray"), marker = list(color = "gray")) %>%
-#                layout(xaxis = list(title = "Principal component"), yaxis = list(title = "Percentage of explained variance"))
-# plot.scree 
+--------------------------------------------------------------------------------
+
+### PC2 vs. PC3 score plot
+```{r PCA_5, echo=FALSE, message=FALSE, warning=FALSE}
+# Make plot of PC1 vs. PC2 scores.
+  plot_ly(data = PCA.scores, 
+          x = ~PC2,
+          y = ~PC3,
+          name = "sample.size.spot",
+          type = "scatter", 
+          mode = "markers",
+          marker = list(size = 12, 
+                        line = list(color = "black", 
+                                    width = 1)),
+          color = ~temperature_r, 
+          colors = rev(brewer.pal
+                       (n = 11, name = "Spectral")),
+          symbol = ~sample,
+          symbols = c('circle',
+                      'circle',
+                      'square',
+                      'triangle-up',
+                      'diamond'),
+          hoverinfo = 'text',
+          text = ~paste(sample.size.spot,
+                        '<br>LA-ICPMS age: ',
+                        Age_round,
+                        ' ± ',
+                        Age2sig_round,
+                        ' Ma<br>Temperature: ',
+                        temperature_r, '°C',
+                        sep = '')) %>%
+    colorbar(title = "Temperature (°C)") %>%
+    layout(xaxis = list(title = "PC2 Score"),
+           yaxis = list(title = "PC3 Score"))
 ```
 
-### Principal component analysis (PCA) plot by sample
-```{r PCA2, echo=FALSE, message=FALSE, warning=FALSE}
-# # set up for PCA (by sample)
-# PCA.sample <- data.frame(PCA.results$x, temperature = DF$temperature_r) # create a data frame of PC by sample
-# 
-# # st up for PCA (by variable)
-# PCA.results.variable <- prcomp(t(DF.PCA[,10:(dim(DF.PCA)[2])]), scale = TRUE) # do principal component analysis on the identifying (not numerical) columns of the DF.PCA data frame
-# PCA.variable <- data.frame(variable.label = c("Pb*", "Ti", "Sr", "Y", "Zr", "Nb", "Lu", "Hf", "Ta", "Th", "U", "La (CN)", "Ce (CN)", "Pr (CN)", "Nd (CN)", "Pm (CN)", "Sm (CN)", "Eu (CN)", "Gd (CN)", "Tb (CN)", "Dy (CN)", "Ho (CN)", "Er (CN)", "Tm (CN)", "Yb (CN)", "Lu (CN)", "Zr-in-ttn T (°C)", "La/Nd", "Gd/Lu", "Gd/Yb", "Zr/Hf", "Lu/Hf", "Hf/Y", "Y/Ho", "Th/U", "Th/Y", "Nb/Ta", "Nb/U", "Nb/Th", "Sr/Y", "Ce/Ce*", "Eu/Eu*", "Total REE", "LREE concavity", "HREE concavity"), PCA.results.variable$x)
-# #PCA.variable <- rbind(PCA.variable, origin = vector(mode = "integer", length = dim(PCA.variable)[2])) # add a row to the PCA.variable data frame for plotting at the origin
-# 
-# # make plot of PCA
-# plot.PCA <- plot_ly(data = PCA.sample, x = ~PC1, y = ~PC2,
-#                            type = "scatter", 
-#                            color = PCA.sample$temperature, colors = rev(brewer.pal(n=9, name="Spectral")),
-#                            text = ~paste(rownames(PCA.sample), "<br>Temperature: ", temperature, "°C", sep =""))
-# plot.PCA
-```
-
-### 3D principal component analysis (PCA) plot by sample
-```{r PCA3d, echo=FALSE, message=FALSE, warning=FALSE}
-# plot.PCA.3D <- plot_ly(data = PCA.sample, x = ~PC1, y = ~PC2, z = ~PC3, 
-#                            type = "scatter3d",
-#                            color = PCA.sample$temperature, colors = rev(brewer.pal(n=9, name="Spectral")),
-#                            text = ~paste(rownames(PCA.sample), "<br>Temperature: ", temperature, "°C", sep =""))
-# plot.PCA.3D
-```
-
-
-### Principal component analysis (PCA) plot by variable
-```{r PCA2, echo=FALSE, message=FALSE, warning=FALSE}
-# plot.PCA.variable <- plot_ly(data = PCA.variable, x = ~PC1, y = ~PC2, type = "scatter", text = ~variable.label)
-# plot.PCA.variable
-# 
-# # set up dataframe for mock biplot plotting
-# blankDF <- as.data.frame(matrix(data = 0, nrow = dim(PCA.variable)[1], ncol = dim(PCA.variable)[2]))# create data frame of origin rows
-# colnames(blankDF) <- colnames(PCA.variable) # rename columns of blankDF to help with binding
-# PCA.variable.biplot <- rbind(PCA.variable, blankDF) # bind origin row data frame to PCA.variable data frame
-# PCA.variable.biplot <- PCA.variable.biplot[kronecker(1:(nrow(PCA.variable)), c(0, (nrow(PCA.variable))), "+"), ] # rearrane rows so every other row is the origin
-# 
-# # plot PCA biplot (lines from origin)
-# plot.PCA.variable.biplot <- plot_ly(data = PCA.variable.biplot, x = ~PC1, y = ~PC2, 
-#                                    type = "scatter", mode = "lines", line = list(color = "black", width = 2)) %>%
-#                                    add_text(text = ~variable.label) %>%
-#                                    layout(showlegend = FALSE)
-# plot.PCA.variable.biplot
-```
-
-```{r factoextra, echo=FALSE, message=FALSE, warning=FALSE}
-
-# # Eigenvalues
-# eig.val.factoextra <- get_eigenvalue(res.pca)
-# eig.val.factoextra
-#   
-# # Results for Variables
-# res.var <- get_pca_var(res.pca)
-# res.var$coord          # Coordinates
-# res.var$contrib        # Contributions to the PCs
-# res.var$cos2           # Quality of representation 
-# # Results for individuals
-# res.ind <- get_pca_ind(res.pca)
-# res.ind$coord          # Coordinates
-# res.ind$contrib        # Contributions to the PCs
-# res.ind$cos2           # Quality of representation 
-# 
-# 
-# # fviz_eig(res.pca) # scree plot (using factoextra package?)
-# fviz_pca_var(res.pca,
-#              col.var = "contrib", # Color by contributions to the PC
-#              gradient.cols = c("#00AFBB", "#E7B800", "#FC4E07"),
-#              repel = TRUE     # Avoid text overlapping
-#              )
-# # 
-
-
-# D.PCA.subset <- DF.PCA[10:dim(DF.PCA),]
-# D.PCA.subset <- as.numeric(D.PCA.subset)
-# PCAresults <- prcomp(D.PCA.subset)
-# PCAresults2 <- princomp(D.PCA.subset)
-# 
-# 
-# plot.PCA <- ggplotly(autoplot(prcomp(t(D.PCA.subset)),
-#                        loadings = TRUE, loadings.label = TRUE, loadings.label.size = 4))
-# plot.PCA
-
-
-
-# PCA <- data.frame(variable = PCA.results$ , # make a data frame organizing the results needed to make a PCA plot
-#                   PCAx = PCA.results$x , # get the x coordinates for PCA
-#                   PCAy = PCA.results$ , # get the y coordinates for PCA
-#                   contib = PCA.results$ , # get the contribution to the PCs
-#                   corr = PCA.results$ ,     # get the correlations between variables and dimensions
-#                   qual = PCA.results$ ) # quality of the representation, cos^2
-```
-
-
-Row
-----------------------------------------------------------
-
-### PCA cluster dendrogram (23 variables)
-```{r PCA_dendrogram}
-# PCA.5 <- princomp(t(DF.PCA[10:dim(DF.PCA),]),cor = TRUE) # do principal component analysis on data frame with 23 variables
-# # plot(PCA.5,type="l") # plot showing variance of each PCA
-# # dendro.PCA.5 <- hclust(dist(PCA.5$scores),method = "ward.D2")
-# # plot.dendro.PCA.5 <- plot(dendro.PCA.5)
-# # plotly.dendro.PCA.5 <- plot_dendro(dendro.PCA.5)
-# # plotly.dendro.PCA.5
-# # 
-# # # 
-# # test1 <- ggdendrogram(dendro.PCA.5, rotate = FALSE, size = 2)
-# # test1
-# # hc <- hclust(dist(PCA.5$scores), method = "ward.D2")
-# # dend1 <- as.dendrogram(hc)
-# # plot_dendro(dend1, height = 600) %>%
-# #   hide_legend() %>%
-# #   highlight(persistent = TRUE, dynamic = TRUE)
-# 
-# 
-# # https://plot.ly/ggplot2/ggdendro-dendrograms/
-# 
-# #dendogram data
-# dd.row <- as.dendrogram(hclust(dist(DF.MDS.23)))
-# dx <- dendro_data(dd.row)
-# 
-# # helper function for creating dendograms
-# ggdend <- function(df) {
-#   ggplot() +
-#     geom_segment(data = df, aes(x=x, y=y, xend=xend, yend=yend)) +
-#     labs(x = "", y = "") + theme_minimal() +
-#     theme(axis.text = element_blank(), axis.ticks = element_blank(),
-#           panel.grid = element_blank())
-# }
-# 
-# # x/y dendograms
-# px <- ggdend(dx$segments)
-# 
-# px
-# 
-# # 
-# # # hide axis ticks and grid lines
-# # eaxis <- list(
-# #   showticklabels = FALSE,
-# #   showgrid = FALSE,
-# #   zeroline = FALSE
-# # )
-# # 
-# # p_empty <- plot_ly() %>%
-# #   # note that margin applies to entire plot, so we can
-# #   # add it here to make tick labels more readable
-# #   layout(margin = list(l = 200),
-# #          xaxis = eaxis,
-# #          yaxis = eaxis)
-# # 
-# # subplot(px, p_empty, p_empty, p_empty, nrows = 2, margin = 0.01)
-
+### PC2 vs. PC3 load plot
+```{r PCA_6, echo=FALSE, message=FALSE, warning=FALSE}
+# Make plot of PC2 vs. PC3 loadings.
+  plot_ly(data = PCA.loadings, 
+          x = ~PC2,
+          y = ~PC3,
+          name = "variable",
+          type = "scatter", 
+          mode = "markers",
+          marker = list(size = 12, 
+                        line = list(color = "black", 
+                                    width = 1)),
+          hoverinfo = 'text',
+          text = ~paste(variable)) %>%
+    layout(xaxis = list(title = "PC2 Load"),
+           yaxis = list(title = "PC3 Load"))
 ```
 
 
@@ -733,14 +559,4 @@ Row
 
 
 
-
-
-
-
-
-
-Ternary plots  
-================================================================================
-`r sample.notes`  
-This section is in progress.
 
